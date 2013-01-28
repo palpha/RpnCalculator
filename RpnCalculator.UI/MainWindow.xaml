@@ -1,0 +1,39 @@
+﻿<Window x:Class="RpnCalculator.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525" d:DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <Grid>
+        <ListView HorizontalAlignment="Left" Height="224" Margin="136,10,0,0" VerticalAlignment="Top" Width="121"
+                  ItemsSource="{Binding Stack}" Name="StackView">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Stack" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button x:Name="Num0" Content="0" HorizontalAlignment="Left" Margin="10,188,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Sign" Content="+-" HorizontalAlignment="Left" Margin="35,188,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Decimal" Content="." HorizontalAlignment="Left" Margin="60,188,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+
+        <Button x:Name="Back" Content="&lt;-" HorizontalAlignment="Left" Margin="110,113,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Mul" Content="x" HorizontalAlignment="Left" Margin="85,138,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Div" Content="/" HorizontalAlignment="Left" Margin="110,138,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Add" Content="+" HorizontalAlignment="Left" Margin="85,163,0,0" VerticalAlignment="Top" Width="20" />
+        <Button x:Name="Sub" Content="–" HorizontalAlignment="Left" Margin="110,163,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="1.32,-1.25" />
+        <Button x:Name="Push" Content="Enter" HorizontalAlignment="Left" Margin="85,188,0,0" VerticalAlignment="Top" Width="45" RenderTransformOrigin="2.7,0.5" />
+        <WrapPanel x:Name="PositiveNumbersPanel" HorizontalAlignment="Left" Height="75" Margin="10,113,0,0" VerticalAlignment="Top" Width="75" Orientation="Horizontal">
+            <WrapPanel.Resources>
+                <Style TargetType="{x:Type Button}">
+                    <Setter Property="Margin" Value="0,0,5,5"/>
+                </Style>
+            </WrapPanel.Resources>
+        </WrapPanel>
+        <TextBlock x:Name="RegT" HorizontalAlignment="Left" Margin="35,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+        <TextBlock x:Name="RegZ" HorizontalAlignment="Left" Margin="35,38,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+        <TextBlock x:Name="RegY" HorizontalAlignment="Left" Margin="35,63,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+        <TextBlock x:Name="RegX" HorizontalAlignment="Left" Margin="35,88,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+
+    </Grid>
+</Window>
