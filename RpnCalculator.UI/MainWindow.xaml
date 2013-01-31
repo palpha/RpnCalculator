@@ -9,7 +9,7 @@
                   ItemsSource="{Binding Stack}" Name="StackView">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Stack" />
+                    <GridViewColumn Header="Stack" DisplayMemberBinding="{Binding Path=Value}" />
                 </GridView>
             </ListView.View>
         </ListView>

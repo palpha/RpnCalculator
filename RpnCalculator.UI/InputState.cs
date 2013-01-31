@@ -1,25 +1,22 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Globalization;
+using RpnCalculator.Logic;
 using RpnCalculator.UI.Annotations;
 
 namespace RpnCalculator.UI
 {
 	public class InputState : INotifyPropertyChanged
 	{
-		private int? integerValue;
-		private Sign currentSign;
+		private string valueString;
 		private Position currentPosition;
-		private int? decimalValue;
+		private bool isGhost;
+		private bool isResult;
+		private Entry entry;
 
 		public Sign CurrentSign
 		{
-			get { return currentSign; }
-			set
-			{
-				currentSign = value;
-				Notify( "CurrentSign" );
-			}
+			get { return Entry.Value >= 0 ? Sign.Positive : Sign.Negative; }
 		}
 
 		public Position CurrentPosition
@@ -27,28 +24,59 @@ namespace RpnCalculator.UI
 			get { return currentPosition; }
 			set
 			{
+				if ( value == currentPosition )
+					return;
 				currentPosition = value;
-				Notify( "CurrentPosition" );
+				OnPropertyChanged( "CurrentPosition" );
 			}
 		}
 
-		public int? Integer
+		public string ValueString
 		{
-			get { return integerValue; }
+			get { return valueString; }
 			set
 			{
-				integerValue = value;
-				Notify( "Integer" );
+				if ( value == valueString )
+					return;
+				valueString = value;
+				OnPropertyChanged( "ValueString" );
 			}
 		}
 
-		public int? Decimal
+		public bool IsGhost
 		{
-			get { return decimalValue; }
+			get { return isGhost; }
 			set
 			{
-				decimalValue = value;
-				Notify( "Decimal" );
+				if ( value.Equals( isGhost ) )
+					return;
+				isGhost = value;
+				OnPropertyChanged( "IsGhost" );
+			}
+		}
+
+		public bool IsResult
+		{
+			get { return isResult; }
+			set
+			{
+				if ( value.Equals( isResult ) )
+					return;
+				isResult = value;
+				OnPropertyChanged( "IsResult" );
+			}
+		}
+
+		public Entry Entry
+		{
+			get { return entry; }
+			set
+			{
+				if ( Equals( value, entry ) )
+					return;
+				entry = value;
+				OnPropertyChanged( "Entry" );
+				OnPropertyChanged( "CurrentSign" );
 			}
 		}
 
@@ -64,39 +92,33 @@ namespace RpnCalculator.UI
 			Decimal = 1
 		}
 
-		public event PropertyChangedEventHandler PropertyChanged;
-
-		[NotifyPropertyChangedInvocator]
-		protected virtual void Notify( string propertyName )
+		public InputState( Entry entry )
 		{
-			var handler = PropertyChanged;
-			if ( handler != null )
-				handler( this, new PropertyChangedEventArgs( propertyName ) );
+			Entry = entry;
+			ValueString = entry.Value.ToString( "0.####################", CultureInfo.InvariantCulture );
+			CurrentPosition = Entry.Value - Math.Truncate( Entry.Value ) > 0 ? Position.Decimal : Position.Integer;
 		}
 
 		public override string ToString()
 		{
 			return string.Format(
-				"{0}{1}{2}{3}",
+				"{0}{1}",
 				CurrentSign == Sign.Negative ? "-" : string.Empty,
-				Integer.HasValue ? Integer.Value.ToString( CultureInfo.InvariantCulture ) : string.Empty,
-				CurrentPosition == Position.Decimal ? "." : string.Empty,
-				Decimal.HasValue ? Decimal.Value.ToString( CultureInfo.InvariantCulture ) : string.Empty );
+				ValueString );
 		}
 
 		public decimal ToDecimal()
 		{
-			var intPart = Integer ?? 0;
-			var decPart = Decimal ?? 0;
-
-			// Yes, we have no math skills!
-			return
-				(CurrentSign == Sign.Negative ? -intPart : intPart)
-					+ decPart / (decimal) Math.Pow( 10, decPart.ToString( CultureInfo.InvariantCulture ).Length );
+			return decimal.Parse( ValueString, CultureInfo.InvariantCulture );
 		}
 
 		public void Push( char character )
 		{
+			if ( IsGhost )
+			{
+				Reset();
+			}
+
 			if ( character == '.' && CurrentPosition == Position.Decimal )
 			{
 				return;
@@ -104,70 +126,51 @@ namespace RpnCalculator.UI
 
 			if ( character == '.' )
 			{
+				ValueString += ".";
 				CurrentPosition = Position.Decimal;
 				return;
 			}
 
-			if (char.IsDigit(character))
+			if ( char.IsDigit( character ) == false )
+			{
+				return;
+			}
 
-			if ( CurrentPosition == Position.Integer )
-			{
-				Integer = Append( Integer, character );
-			}
-			else
-			{
-				Decimal = Append( Decimal, character );
-			}
+			ValueString += character;
+			Entry.Value = ToDecimal();
 		}
 
 		public void Backspace()
 		{
-			if ( CurrentPosition == Position.Integer )
-			{
-				Integer = Backspace( Integer );
-			}
-			else if ( Decimal.HasValue )
-			{
-				Decimal = Backspace( Decimal );
-			}
-			else
-			{
-				CurrentPosition = Position.Integer;
-			}
-		}
+			ValueString = ValueString.Substring( 0, ValueString.Length - 1 );
 
-		private int? Backspace( int? part )
-		{
-			if ( part.HasValue == false )
+			if ( ValueString.LastIndexOf( '.' ) == ValueString.Length )
 			{
-				return null;
+				ValueString = ValueString.Substring( 0, ValueString.Length - 1 );
 			}
 
-			var partStr = part.Value.ToString( CultureInfo.InvariantCulture );
-			int result;
-			return int.TryParse( partStr.Substring( 0, partStr.Length - 1 ), out result )
-				? result
-				: (int?) null;
-		}
+			Entry.Value = decimal.Parse( ValueString, CultureInfo.InvariantCulture );
 
-		private int? Append( int? part, char character )
-		{
-			var partStr = part.HasValue
-				? part.Value.ToString( CultureInfo.InvariantCulture )
-				: string.Empty;
-
-			var result = int.Parse( partStr + character );
-			return result > 0
-				? result
-				: (int?) null;
+			CurrentPosition = Entry.Value - Math.Truncate( Entry.Value ) > 0
+				? Position.Decimal
+				: Position.Integer;
 		}
 
 		public void Reset()
 		{
-			CurrentSign = Sign.Positive;
+			IsGhost = false;
 			CurrentPosition = Position.Integer;
-			Integer = null;
-			Decimal = null;
+			ValueString = string.Empty;
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		[NotifyPropertyChangedInvocator]
+		protected virtual void OnPropertyChanged( string propertyName )
+		{
+			var handler = PropertyChanged;
+			if ( handler != null )
+				handler( this, new PropertyChangedEventArgs( propertyName ) );
 		}
 	}
 }

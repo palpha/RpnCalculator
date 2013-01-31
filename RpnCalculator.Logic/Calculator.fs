@@ -3,6 +3,7 @@
 open System
 open System.Collections.Generic
 open System.Collections.Specialized
+open System.ComponentModel
 open RpnCalculator.Collections
 open System.Linq.Expressions
 open System.Linq
@@ -14,14 +15,21 @@ type public Operation =
     | Division = 3
     | Swap = 4
 
+type public Entry(v:decimal) =
+    let mutable value = v
+    
+    member this.Value
+        with public get() = value
+        and public set v = value <- v
+
 type public Calculator() =
-    let stack = new ObservableStack<decimal>()
+    let stack = new ObservableStack<Entry>()
     let peek n =
         match (stack.Count, n) with
         | (0, _) -> None
         | (_, 0) -> Some(stack.Peek())
         | (x, y) when y >= x -> None
-        | (_, _) -> Some (stack |> Seq.nth (stack.Count - n))
+        | (_, _) -> Some (stack |> Seq.nth n)
 
     member this.Stack = stack
     member this.X = peek 0
@@ -29,25 +37,22 @@ type public Calculator() =
     member this.Z = peek 2
     member this.T = peek 3
 
-    member this.Push(x) =
-        match x with
-        | 0m -> ()
-        | _ -> stack.Push(x)
+    member this.Push x = stack.Push x
 
-    member this.Perform(op) =
+    member this.Perform op =
         let fn =
-            match (stack.Count, op) with
-            | (0, _) -> None
-            | (1, _) -> None
-            | (_, Operation.Addition) -> Some(+)
-            | (_, Operation.Subtraction) -> Some(-)
-            | (_, Operation.Multiplication) -> Some(*)
-            | (_, Operation.Division) -> Some(/)
-            | (_, Operation.Swap) ->
+            match stack.Count, op with
+            | 0, _ -> None
+            | 1, _ -> None
+            | _, Operation.Addition -> Some(+)
+            | _, Operation.Subtraction -> Some(-)
+            | _, Operation.Multiplication -> Some(*)
+            | _, Operation.Division -> Some(/)
+            | _, Operation.Swap ->
                 let x = stack.Pop()
                 let y = stack.Pop()
-                stack.Push(x)
-                stack.Push(y)
+                stack.Push x
+                stack.Push y
                 None
             | _ -> raise (InvalidOperationException())
 
@@ -55,5 +60,7 @@ type public Calculator() =
         | Some(fn) ->
             let x = stack.Pop()
             let y = stack.Pop()
-            stack.Push(fn y x)
+            let result = fn y.Value x.Value
+            let value = Entry result
+            stack.Push value
         | None -> ()

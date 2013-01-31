@@ -1,20 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.FSharp.Core;
 using RpnCalculator.Collections;
 using RpnCalculator.Logic;
@@ -30,13 +22,38 @@ namespace RpnCalculator.UI
 		private readonly Calculator calculator = new Calculator();
 
 		private readonly IDictionary<Key, char> inputMap = new Dictionary<Key, char> { };
+		private InputState inputState;
 
-		public ObservableStack<decimal> Stack
+		public ObservableStack<Entry> Stack
 		{
 			get { return calculator.Stack; }
 		}
 
-		public InputState InputState { get; set; }
+		public InputState InputState
+		{
+			get { return inputState; }
+			set
+			{
+				if ( inputState != null )
+				{
+					inputState.PropertyChanged -= InputStateOnPropertyChanged;
+				}
+
+				inputState = value;
+				inputState.PropertyChanged += InputStateOnPropertyChanged;
+				RegX.Text = inputState.ToString();
+			}
+		}
+
+		private void InputStateOnPropertyChanged( object sender, PropertyChangedEventArgs e )
+		{
+			if ( e.PropertyName != "ValueString" )
+			{
+				return;
+			}
+
+			RegX.Text = InputState.ToString();
+		}
 
 		public MainWindow()
 		{
@@ -47,7 +64,7 @@ namespace RpnCalculator.UI
 		{
 			base.OnInitialized( e );
 
-			InputState = new InputState();
+			SetNewInputState();
 
 			WireNumpadButtons();
 			CreateNumericInputMap();
@@ -65,8 +82,6 @@ namespace RpnCalculator.UI
 
 			StackView.ItemsSource = Stack;
 			Stack.CollectionChanged += StackOnCollectionChanged;
-
-			InputState.PropertyChanged += InputStateOnPropertyChanged;
 		}
 
 		private void CreateNumericInputMap()
@@ -112,16 +127,16 @@ namespace RpnCalculator.UI
 		private void StackOnCollectionChanged(
 			object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs )
 		{
-			RegY.Text = OptionToString( calculator.Y );
-			RegZ.Text = OptionToString( calculator.Z );
-			RegT.Text = OptionToString( calculator.T );
+			RegY.Text = EntryToString( calculator.Y );
+			RegZ.Text = EntryToString( calculator.Z );
+			RegT.Text = EntryToString( calculator.T );
 		}
 
-		private static string OptionToString( FSharpOption<decimal> opt )
+		private static string EntryToString( FSharpOption<Entry> entry )
 		{
-			return FSharpOption<decimal>.get_IsNone( opt )
+			return FSharpOption<Entry>.get_IsNone( entry )
 				? string.Empty
-				: opt.Value.ToString( CultureInfo.InvariantCulture );
+				: entry.Value.Value.ToString( CultureInfo.InvariantCulture );
 		}
 
 		private void BackOnClick( object sender, RoutedEventArgs e )
@@ -131,29 +146,24 @@ namespace RpnCalculator.UI
 
 		private void PushOnClick( object sender, RoutedEventArgs e )
 		{
-			calculator.Push( InputState.ToDecimal() );
-			InputState.Reset();
-		}
-
-		private void InputStateOnPropertyChanged( object sender, PropertyChangedEventArgs e )
-		{
-			RegX.Text = InputState.ToString();
+			SetGhostInputState();
 		}
 
 		private void NumPadOnClick( object sender, RoutedEventArgs e )
 		{
 			var btn = e.Source as Button;
 			var content = btn.Content.ToString();
-			InputState.Push( content[0] );
+
+			PushToInputState( content[0] );
 		}
 
 		private RoutedEventHandler OpOnClick( Operation op )
 		{
-			//TODO: DRY
-			calculator.Push( InputState.ToDecimal() );
-			InputState.Reset();
-
-			return ( s, e ) => calculator.Perform( op );
+			return ( s, e ) =>
+				{
+					calculator.Perform( op );
+					SetResultInputState();
+				};
 		}
 
 		protected override void OnKeyDown( KeyEventArgs e )
@@ -163,27 +173,30 @@ namespace RpnCalculator.UI
 				switch ( e.Key )
 				{
 					case Key.Enter:
-						calculator.Push( InputState.ToDecimal() );
-						InputState.Reset();
+						SetGhostInputState();
 						break;
 					case Key.Back:
 						InputState.Backspace();
 						break;
 					case Key.Divide:
-						calculator.Push( InputState.ToDecimal() );
 						calculator.Perform( Operation.Division );
+						SetResultInputState();
 						break;
 					case Key.Multiply:
-						calculator.Push( InputState.ToDecimal() );
 						calculator.Perform( Operation.Multiplication );
+						SetResultInputState();
 						break;
 					case Key.Subtract:
-						calculator.Push( InputState.ToDecimal() );
 						calculator.Perform( Operation.Subtraction );
+						SetResultInputState();
 						break;
 					case Key.Add:
-						calculator.Push( InputState.ToDecimal() );
 						calculator.Perform( Operation.Addition );
+						SetResultInputState();
+						break;
+					case Key.OemPeriod:
+					case Key.Decimal:
+						PushToInputState( '.' );
 						break;
 					default:
 						continue;
@@ -195,11 +208,40 @@ namespace RpnCalculator.UI
 			if ( !e.Handled && inputMap.ContainsKey( e.Key ) )
 			{
 				var input = inputMap[e.Key];
-				InputState.Push( input );
+				PushToInputState( input );
 				e.Handled = true;
 			}
 
 			base.OnKeyDown( e );
+		}
+
+		private void SetNewInputState()
+		{
+			var entry = new Entry( 0 );
+			calculator.Push( entry );
+			InputState = new InputState( entry ) { IsGhost = true };
+		}
+
+		private void SetResultInputState()
+		{
+			InputState = new InputState( calculator.X.Value ) { IsResult = true };
+		}
+
+		private void SetGhostInputState()
+		{
+			var entry = new Entry( calculator.X.Value.Value );
+			calculator.Push( entry );
+			InputState = new InputState( entry ) { IsGhost = true };
+		}
+
+		private void PushToInputState( char input )
+		{
+			if ( InputState.IsResult )
+			{
+				SetNewInputState();
+			}
+
+			InputState.Push( input );
 		}
 	}
 }

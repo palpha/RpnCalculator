@@ -8,25 +8,25 @@ open RpnCalculator.Logic
 // Define your library scripting code here
 
 let calc = Calculator()
-calc.Push(10m)
-calc.Push(2m)
-calc.Push(5m)
+calc.Push(Entry 10m)
+calc.Push(Entry 2m)
+calc.Push(Entry 5m)
 calc.Perform(Operation.Multiplication)
-assert (calc.X = Some(10m))
+assert (calc.X = Some(Entry 10m))
 calc.Perform(Operation.Addition)
-assert (calc.X = Some(20m))
+assert (calc.X = Some(Entry 20m))
 assert (calc.Y = None)
-calc.Push(10m)
+calc.Push(Entry 10m)
 calc.Perform(Operation.Swap)
-assert (calc.X = Some(20m))
-assert (calc.Y = Some(10m))
+assert (calc.X = Some(Entry 20m))
+assert (calc.Y = Some(Entry 10m))
 calc.Perform(Operation.Subtraction)
-assert (calc.X = Some(-10m))
-calc.Push(10m)
-calc.Push(2m)
+assert (calc.X = Some(Entry -10m))
+calc.Push(Entry 10m)
+calc.Push(Entry 2m)
 calc.Perform(Operation.Multiplication)
 calc.Perform(Operation.Addition)
-assert (calc.X = Some(10m))
+assert (calc.X = Some(Entry 10m))
 
 
-calc.Stack
+calc.Stack |> Seq.nth 0
