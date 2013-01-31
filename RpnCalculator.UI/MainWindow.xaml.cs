@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -28,6 +29,8 @@ namespace RpnCalculator.UI
 		private readonly Random rnd = new Random();
 		private readonly Calculator calculator = new Calculator();
 
+		private readonly IDictionary<Key, char> inputMap = new Dictionary<Key, char> { };
+
 		public ObservableStack<decimal> Stack
 		{
 			get { return calculator.Stack; }
@@ -46,6 +49,45 @@ namespace RpnCalculator.UI
 
 			InputState = new InputState();
 
+			WireNumpadButtons();
+			CreateNumericInputMap();
+
+			Num0.Click += NumPadOnClick;
+			Decimal.Click += NumPadOnClick;
+
+			Back.Click += BackOnClick;
+			Push.Click += PushOnClick;
+
+			Add.Click += OpOnClick( Operation.Addition );
+			Sub.Click += OpOnClick( Operation.Subtraction );
+			Mul.Click += OpOnClick( Operation.Multiplication );
+			Div.Click += OpOnClick( Operation.Division );
+
+			StackView.ItemsSource = Stack;
+			Stack.CollectionChanged += StackOnCollectionChanged;
+
+			InputState.PropertyChanged += InputStateOnPropertyChanged;
+		}
+
+		private void CreateNumericInputMap()
+		{
+			Func<string, int, Key> getKey =
+				( prefix, num ) => (Key) Enum.Parse(
+					typeof( Key ),
+					prefix + num.ToString( CultureInfo.InvariantCulture ) );
+
+			Func<int, char> getChar = x => x.ToString( CultureInfo.InvariantCulture )[0];
+
+			Enumerable.Range( 0, 10 ).ToList()
+				.ForEach( x =>
+					{
+						inputMap.Add( getKey( "D", x ), getChar( x ) );
+						inputMap.Add( getKey( "NumPad", x ), getChar( x ) );
+					} );
+		}
+
+		private void WireNumpadButtons()
+		{
 			foreach ( var btn in
 				from i in new[]
 					{
@@ -65,31 +107,21 @@ namespace RpnCalculator.UI
 				btn.Click += NumPadOnClick;
 				PositiveNumbersPanel.Children.Add( btn );
 			}
-
-			Num0.Click += NumPadOnClick;
-			Decimal.Click += NumPadOnClick;
-
-			Back.Click += BackOnClick;
-			Push.Click += PushOnClick;
-
-			Add.Click += OpOnClick( Operation.Addition );
-			Sub.Click += OpOnClick( Operation.Subtraction );
-			Mul.Click += OpOnClick( Operation.Multiplication );
-			Div.Click += OpOnClick( Operation.Division );
-
-			StackView.ItemsSource = Stack;
-			Stack.CollectionChanged += StackOnCollectionChanged;
-
-			InputState.PropertyChanged += InputStateOnPropertyChanged;
 		}
 
 		private void StackOnCollectionChanged(
 			object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs )
 		{
-			var y = calculator.Y;
-			RegY.Text = y.Equals( FSharpOption<decimal>.None )
+			RegY.Text = OptionToString( calculator.Y );
+			RegZ.Text = OptionToString( calculator.Z );
+			RegT.Text = OptionToString( calculator.T );
+		}
+
+		private static string OptionToString( FSharpOption<decimal> opt )
+		{
+			return FSharpOption<decimal>.get_IsNone( opt )
 				? string.Empty
-				: y.Value.ToString();
+				: opt.Value.ToString( CultureInfo.InvariantCulture );
 		}
 
 		private void BackOnClick( object sender, RoutedEventArgs e )
@@ -112,7 +144,7 @@ namespace RpnCalculator.UI
 		{
 			var btn = e.Source as Button;
 			var content = btn.Content.ToString();
-			InputState.Push( content );
+			InputState.Push( content[0] );
 		}
 
 		private RoutedEventHandler OpOnClick( Operation op )
@@ -122,6 +154,52 @@ namespace RpnCalculator.UI
 			InputState.Reset();
 
 			return ( s, e ) => calculator.Perform( op );
+		}
+
+		protected override void OnKeyDown( KeyEventArgs e )
+		{
+			do
+			{
+				switch ( e.Key )
+				{
+					case Key.Enter:
+						calculator.Push( InputState.ToDecimal() );
+						InputState.Reset();
+						break;
+					case Key.Back:
+						InputState.Backspace();
+						break;
+					case Key.Divide:
+						calculator.Push( InputState.ToDecimal() );
+						calculator.Perform( Operation.Division );
+						break;
+					case Key.Multiply:
+						calculator.Push( InputState.ToDecimal() );
+						calculator.Perform( Operation.Multiplication );
+						break;
+					case Key.Subtract:
+						calculator.Push( InputState.ToDecimal() );
+						calculator.Perform( Operation.Subtraction );
+						break;
+					case Key.Add:
+						calculator.Push( InputState.ToDecimal() );
+						calculator.Perform( Operation.Addition );
+						break;
+					default:
+						continue;
+				}
+
+				e.Handled = true;
+			} while ( false );
+
+			if ( !e.Handled && inputMap.ContainsKey( e.Key ) )
+			{
+				var input = inputMap[e.Key];
+				InputState.Push( input );
+				e.Handled = true;
+			}
+
+			base.OnKeyDown( e );
 		}
 	}
 }

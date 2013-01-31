@@ -95,18 +95,20 @@ namespace RpnCalculator.UI
 					+ decPart / (decimal) Math.Pow( 10, decPart.ToString( CultureInfo.InvariantCulture ).Length );
 		}
 
-		public void Push( string character )
+		public void Push( char character )
 		{
-			if ( character == "." && CurrentPosition == Position.Decimal )
+			if ( character == '.' && CurrentPosition == Position.Decimal )
 			{
 				return;
 			}
 
-			if ( character == "." )
+			if ( character == '.' )
 			{
 				CurrentPosition = Position.Decimal;
 				return;
 			}
+
+			if (char.IsDigit(character))
 
 			if ( CurrentPosition == Position.Integer )
 			{
@@ -148,7 +150,7 @@ namespace RpnCalculator.UI
 				: (int?) null;
 		}
 
-		private int? Append( int? part, string character )
+		private int? Append( int? part, char character )
 		{
 			var partStr = part.HasValue
 				? part.Value.ToString( CultureInfo.InvariantCulture )
