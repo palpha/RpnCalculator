@@ -14,22 +14,28 @@ type public Operation =
     | Multiplication = 2
     | Division = 3
     | Swap = 4
+    | Drop = 5
 
 type public Entry(v:decimal) =
+    let ev = new Event<_,_>()
     let mutable value = v
     
     member this.Value
         with public get() = value
         and public set v = value <- v
 
+    interface INotifyPropertyChanged with
+        [<CLIEvent>]
+        member this.PropertyChanged = ev.Publish
+
 type public Calculator() =
     let stack = new ObservableStack<Entry>()
     let peek n =
         match (stack.Count, n) with
-        | (0, _) -> None
-        | (_, 0) -> Some(stack.Peek())
-        | (x, y) when y >= x -> None
-        | (_, _) -> Some (stack |> Seq.nth n)
+        | 0, _ -> None
+        | _, 0 -> Some(stack.Peek())
+        | x, y when y >= x -> None
+        | _, _ -> Some (stack |> Seq.nth n)
 
     member this.Stack = stack
     member this.X = peek 0
@@ -53,6 +59,9 @@ type public Calculator() =
                 let y = stack.Pop()
                 stack.Push x
                 stack.Push y
+                None
+            | _, Operation.Drop ->
+                stack.Pop() |> ignore
                 None
             | _ -> raise (InvalidOperationException())
 

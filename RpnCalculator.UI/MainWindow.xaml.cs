@@ -4,9 +4,11 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.FSharp.Core;
 using RpnCalculator.Collections;
 using RpnCalculator.Logic;
@@ -41,7 +43,9 @@ namespace RpnCalculator.UI
 
 				inputState = value;
 				inputState.PropertyChanged += InputStateOnPropertyChanged;
+
 				RegX.Text = inputState.ToString();
+				ResizeGridViewColumn( StackValues );
 			}
 		}
 
@@ -53,6 +57,7 @@ namespace RpnCalculator.UI
 			}
 
 			RegX.Text = InputState.ToString();
+			ResizeGridViewColumn( StackValues );
 		}
 
 		public MainWindow()
@@ -82,6 +87,28 @@ namespace RpnCalculator.UI
 
 			StackView.ItemsSource = Stack;
 			Stack.CollectionChanged += StackOnCollectionChanged;
+
+			GotFocus += DisableButtonFocus;
+		}
+
+		private void DisableButtonFocus( object sender, RoutedEventArgs e )
+		{
+			var button = e.Source as Button;
+			if ( button == null || Equals( button, Push ) )
+				return;
+
+			Push.Focus();
+			e.Handled = true;
+		}
+
+		protected override void OnPreviewKeyDown( KeyEventArgs e )
+		{
+			if ( e.Key == Key.Tab )
+			{
+				e.Handled = true;
+			}
+
+			base.OnPreviewKeyDown( e );
 		}
 
 		private void CreateNumericInputMap()
@@ -152,6 +179,9 @@ namespace RpnCalculator.UI
 		private void NumPadOnClick( object sender, RoutedEventArgs e )
 		{
 			var btn = e.Source as Button;
+			if ( btn == null )
+				return;
+
 			var content = btn.Content.ToString();
 
 			PushToInputState( content[0] );
@@ -168,16 +198,37 @@ namespace RpnCalculator.UI
 
 		protected override void OnKeyDown( KeyEventArgs e )
 		{
+			var shiftIsDown = (e.KeyboardDevice.GetKeyStates( Key.LeftShift )
+				| e.KeyboardDevice.GetKeyStates( Key.RightShift )).HasFlag( KeyStates.Down );
+
 			do
 			{
 				switch ( e.Key )
 				{
 					case Key.Enter:
-						SetGhostInputState();
+						if ( shiftIsDown )
+						{
+							calculator.Perform( Operation.Swap );
+							SetResultInputState();
+						}
+						else
+						{
+							SetGhostInputState();
+						}
+
 						break;
 					case Key.Back:
-						InputState.Backspace();
+						if ( shiftIsDown )
+						{
+							calculator.Perform( Operation.Drop );
+							SetResultInputState();
+						}
+						else
+						{
+							InputState.Backspace();
+						}
 						break;
+					case Key.Oem2:
 					case Key.Divide:
 						calculator.Perform( Operation.Division );
 						SetResultInputState();
@@ -186,10 +237,20 @@ namespace RpnCalculator.UI
 						calculator.Perform( Operation.Multiplication );
 						SetResultInputState();
 						break;
+					case Key.OemMinus:
 					case Key.Subtract:
-						calculator.Perform( Operation.Subtraction );
-						SetResultInputState();
+						if ( shiftIsDown )
+						{
+							InputState.Invert();
+						}
+						else
+						{
+							calculator.Perform( Operation.Subtraction );
+							SetResultInputState();
+						}
+
 						break;
+					case Key.OemPlus:
 					case Key.Add:
 						calculator.Perform( Operation.Addition );
 						SetResultInputState();
@@ -242,6 +303,16 @@ namespace RpnCalculator.UI
 			}
 
 			InputState.Push( input );
+		}
+
+		private void ResizeGridViewColumn( GridViewColumn column )
+		{
+			if ( double.IsNaN( column.Width ) )
+			{
+				column.Width = column.ActualWidth;
+			}
+
+			column.Width = double.NaN;
 		}
 	}
 }

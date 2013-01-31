@@ -95,16 +95,18 @@ namespace RpnCalculator.UI
 		public InputState( Entry entry )
 		{
 			Entry = entry;
-			ValueString = entry.Value.ToString( "0.####################", CultureInfo.InvariantCulture );
+			SetValueStringFromEntryValue();
 			CurrentPosition = Entry.Value - Math.Truncate( Entry.Value ) > 0 ? Position.Decimal : Position.Integer;
+		}
+
+		private void SetValueStringFromEntryValue()
+		{
+			ValueString = Entry.Value.ToString( "0.####################", CultureInfo.InvariantCulture );
 		}
 
 		public override string ToString()
 		{
-			return string.Format(
-				"{0}{1}",
-				CurrentSign == Sign.Negative ? "-" : string.Empty,
-				ValueString );
+			return ValueString;
 		}
 
 		public decimal ToDecimal()
@@ -136,20 +138,41 @@ namespace RpnCalculator.UI
 				return;
 			}
 
-			ValueString += character;
+			if ( character == '0' && ValueString == "0" )
+			{
+				return;
+			}
+
+			var currentValueString = ValueString;
+			if ( ValueString == "0" )
+			{
+				currentValueString = string.Empty;
+			}
+
+			ValueString = currentValueString + character;
 			Entry.Value = ToDecimal();
 		}
 
 		public void Backspace()
 		{
-			ValueString = ValueString.Substring( 0, ValueString.Length - 1 );
+			var newValueString = ValueString.Substring( 0, ValueString.Length - 1 );
 
-			if ( ValueString.LastIndexOf( '.' ) == ValueString.Length )
+			if ( newValueString.LastIndexOf( '.' ) == newValueString.Length )
 			{
-				ValueString = ValueString.Substring( 0, ValueString.Length - 1 );
+				newValueString = newValueString.Substring( 0, newValueString.Length - 1 );
 			}
 
-			Entry.Value = decimal.Parse( ValueString, CultureInfo.InvariantCulture );
+			if ( newValueString == string.Empty )
+			{
+				Entry.Value = 0;
+				ValueString = "0";
+				IsGhost = true;
+			}
+			else
+			{
+				ValueString = newValueString;
+				Entry.Value = decimal.Parse( ValueString, CultureInfo.InvariantCulture );
+			}
 
 			CurrentPosition = Entry.Value - Math.Truncate( Entry.Value ) > 0
 				? Position.Decimal
@@ -161,6 +184,12 @@ namespace RpnCalculator.UI
 			IsGhost = false;
 			CurrentPosition = Position.Integer;
 			ValueString = string.Empty;
+		}
+
+		public void Invert()
+		{
+			Entry.Value = -Entry.Value;
+			SetValueStringFromEntryValue();
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

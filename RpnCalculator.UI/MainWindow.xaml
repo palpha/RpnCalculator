@@ -3,37 +3,48 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" d:DataContext="{Binding RelativeSource={RelativeSource Self}}">
+        Title="MainWindow" Height="350" Width="350" d:DataContext="{Binding RelativeSource={RelativeSource Self}}" ResizeMode="NoResize">
+    <Window.Resources>
+        <Style TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+    </Window.Resources>
     <Grid>
-        <ListView HorizontalAlignment="Left" Height="224" Margin="136,10,0,0" VerticalAlignment="Top" Width="121"
+        <ListView HorizontalAlignment="Left" Height="195" Margin="135,10,0,0" VerticalAlignment="Top" Width="199"
                   ItemsSource="{Binding Stack}" Name="StackView">
+            <ListView.Resources>
+                <Style TargetType="{x:Type GridViewColumnHeader}">
+                    <Setter Property="Visibility" Value="Collapsed"></Setter>
+                </Style>
+            </ListView.Resources>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Stack" DisplayMemberBinding="{Binding Path=Value}" />
+                    <GridViewColumn x:Name="StackValues" Header="Stack" DisplayMemberBinding="{Binding Path=Value}" />
                 </GridView>
             </ListView.View>
         </ListView>
-        <Button x:Name="Num0" Content="0" HorizontalAlignment="Left" Margin="10,188,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
-        <Button x:Name="Sign" Content="+-" HorizontalAlignment="Left" Margin="35,188,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
-        <Button x:Name="Decimal" Content="." HorizontalAlignment="Left" Margin="60,188,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Num0" Content="0" HorizontalAlignment="Left" Margin="10,185,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Sign" Content="+-" HorizontalAlignment="Left" Margin="35,185,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Decimal" Content="." HorizontalAlignment="Left" Margin="60,185,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
 
-        <Button x:Name="Back" Content="&lt;-" HorizontalAlignment="Left" Margin="110,113,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
-        <Button x:Name="Mul" Content="x" HorizontalAlignment="Left" Margin="85,138,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
-        <Button x:Name="Div" Content="/" HorizontalAlignment="Left" Margin="110,138,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
-        <Button x:Name="Add" Content="+" HorizontalAlignment="Left" Margin="85,163,0,0" VerticalAlignment="Top" Width="20" />
-        <Button x:Name="Sub" Content="–" HorizontalAlignment="Left" Margin="110,163,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="1.32,-1.25" />
-        <Button x:Name="Push" Content="Enter" HorizontalAlignment="Left" Margin="85,188,0,0" VerticalAlignment="Top" Width="45" RenderTransformOrigin="2.7,0.5" />
-        <WrapPanel x:Name="PositiveNumbersPanel" HorizontalAlignment="Left" Height="75" Margin="10,113,0,0" VerticalAlignment="Top" Width="75" Orientation="Horizontal">
+        <Button x:Name="Back" Content="&lt;-" HorizontalAlignment="Left" Margin="110,110,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Mul" Content="x" HorizontalAlignment="Left" Margin="85,135,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Div" Content="/" HorizontalAlignment="Left" Margin="110,135,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="2.7,0.5" />
+        <Button x:Name="Add" Content="+" HorizontalAlignment="Left" Margin="85,160,0,0" VerticalAlignment="Top" Width="20" />
+        <Button x:Name="Sub" Content="–" HorizontalAlignment="Left" Margin="110,160,0,0" VerticalAlignment="Top" Width="20" RenderTransformOrigin="1.32,-1.25" />
+        <Button x:Name="Push" Content="Enter" HorizontalAlignment="Left" Margin="85,185,0,0" VerticalAlignment="Top" Width="45" RenderTransformOrigin="2.7,0.5" />
+        <WrapPanel x:Name="PositiveNumbersPanel" HorizontalAlignment="Left" Height="75" Margin="10,110,0,0" VerticalAlignment="Top" Width="75" Orientation="Horizontal">
             <WrapPanel.Resources>
                 <Style TargetType="{x:Type Button}">
                     <Setter Property="Margin" Value="0,0,5,5"/>
                 </Style>
             </WrapPanel.Resources>
         </WrapPanel>
-        <TextBlock x:Name="RegT" HorizontalAlignment="Left" Margin="35,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
-        <TextBlock x:Name="RegZ" HorizontalAlignment="Left" Margin="35,38,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
-        <TextBlock x:Name="RegY" HorizontalAlignment="Left" Margin="35,63,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
-        <TextBlock x:Name="RegX" HorizontalAlignment="Left" Margin="35,88,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+        <TextBlock x:Name="RegT" HorizontalAlignment="Left" Margin="35,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+        <TextBlock x:Name="RegZ" HorizontalAlignment="Left" Margin="35,35,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+        <TextBlock x:Name="RegY" HorizontalAlignment="Left" Margin="35,60,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+        <TextBlock x:Name="RegX" HorizontalAlignment="Left" Margin="35,85,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" Width="95"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="147,405,0,-107" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
 
     </Grid>
 </Window>
