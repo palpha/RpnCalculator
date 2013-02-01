@@ -31,10 +31,10 @@ type public Entry(v:decimal) =
 type public Calculator() =
     let stack = new ObservableStack<Entry>()
     let peek n =
-        match (stack.Count, n) with
+        match stack.Count, n with
         | 0, _ -> None
-        | _, 0 -> Some(stack.Peek())
         | x, y when y >= x -> None
+        | _, 0 -> Some(stack.Peek())
         | _, _ -> Some (stack |> Seq.nth n)
 
     member this.Stack = stack
