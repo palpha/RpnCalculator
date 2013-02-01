@@ -16,7 +16,7 @@ type public Operation =
     | Swap = 4
     | Drop = 5
 
-type public Entry(v:decimal) =
+type public Entry (v : decimal) =
     let ev = new Event<_,_>()
     let mutable value = v
     
@@ -28,13 +28,13 @@ type public Entry(v:decimal) =
         [<CLIEvent>]
         member this.PropertyChanged = ev.Publish
 
-type public Calculator() =
+type public Calculator () =
     let stack = new ObservableStack<Entry>()
     let peek n =
         match stack.Count, n with
         | 0, _ -> None
         | x, y when y >= x -> None
-        | _, 0 -> Some(stack.Peek())
+        | _, 0 -> Some (stack.Peek())
         | _, _ -> Some (stack |> Seq.nth n)
 
     member this.Stack = stack
@@ -66,7 +66,7 @@ type public Calculator() =
             | _ -> raise (InvalidOperationException())
 
         match fn with
-        | Some(fn) ->
+        | Some fn ->
             let x = stack.Pop()
             let y = stack.Pop()
             let result = fn y.Value x.Value
