@@ -17,24 +17,26 @@ type public Operation =
     | Drop = 5
 
 type public Entry (v : decimal) =
-    let ev = new Event<_,_>()
+    let ev = new Event<_,_> ()
     let mutable value = v
     
     member this.Value
         with public get() = value
-        and public set v = value <- v
+        and public set v =
+            value <- v
+            ev.Trigger (this, PropertyChangedEventArgs "Value")
 
     interface INotifyPropertyChanged with
         [<CLIEvent>]
         member this.PropertyChanged = ev.Publish
 
 type public Calculator () =
-    let stack = new ObservableStack<Entry>()
+    let stack = new ObservableStack<Entry> ()
     let peek n =
         match stack.Count, n with
         | 0, _ -> None
         | x, y when y >= x -> None
-        | _, 0 -> Some (stack.Peek())
+        | _, 0 -> Some (stack.Peek ())
         | _, _ -> Some (stack |> Seq.nth n)
 
     member this.Stack = stack
@@ -50,25 +52,25 @@ type public Calculator () =
             match stack.Count, op with
             | 0, _ -> None
             | 1, _ -> None
-            | _, Operation.Addition -> Some(+)
-            | _, Operation.Subtraction -> Some(-)
-            | _, Operation.Multiplication -> Some(*)
-            | _, Operation.Division -> Some(/)
+            | _, Operation.Addition -> Some (+)
+            | _, Operation.Subtraction -> Some (-)
+            | _, Operation.Multiplication -> Some (*)
+            | _, Operation.Division -> Some (/)
             | _, Operation.Swap ->
-                let x = stack.Pop()
-                let y = stack.Pop()
+                let x = stack.Pop ()
+                let y = stack.Pop ()
                 stack.Push x
                 stack.Push y
                 None
             | _, Operation.Drop ->
-                stack.Pop() |> ignore
+                stack.Pop () |> ignore
                 None
-            | _ -> raise (InvalidOperationException())
+            | _ -> raise (InvalidOperationException ())
 
         match fn with
         | Some fn ->
-            let x = stack.Pop()
-            let y = stack.Pop()
+            let x = stack.Pop ()
+            let y = stack.Pop ()
             let result = fn y.Value x.Value
             let value = Entry result
             stack.Push value
