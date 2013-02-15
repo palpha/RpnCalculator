@@ -75,6 +75,7 @@ namespace RpnCalculator.UI
 			Num0.Click += NumPadOnClick;
 			Decimal.Click += NumPadOnClick;
 
+			Swap.Click += SwapOnClick;
 			Back.Click += BackOnClick;
 			Push.Click += PushOnClick;
 
@@ -141,9 +142,12 @@ namespace RpnCalculator.UI
 						Content = i,
 						HorizontalAlignment = HorizontalAlignment.Left,
 						VerticalAlignment = VerticalAlignment.Top,
-						Width = 20
+						Width = 20,
+						Height = 20,
+						FontSize = 18
 					} )
 			{
+				btn.Padding = new Thickness( btn.Padding.Left, -4, btn.Padding.Right, btn.Padding.Bottom );
 				btn.Click += NumPadOnClick;
 				PositiveNumbersPanel.Children.Add( btn );
 			}
@@ -162,6 +166,11 @@ namespace RpnCalculator.UI
 			return FSharpOption<Entry>.get_IsNone( entry )
 				? string.Empty
 				: entry.Value.Value.ToString( CultureInfo.InvariantCulture );
+		}
+
+		private void SwapOnClick( object sender, RoutedEventArgs e )
+		{
+			Perform( Operation.Swap );
 		}
 
 		private void BackOnClick( object sender, RoutedEventArgs e )
@@ -187,11 +196,13 @@ namespace RpnCalculator.UI
 
 		private RoutedEventHandler OpOnClick( Operation op )
 		{
-			return ( s, e ) =>
-				{
-					calculator.Perform( op );
-					SetResultInputState();
-				};
+			return ( s, e ) => Perform( op );
+		}
+
+		private void Perform( Operation op )
+		{
+			calculator.Perform( op );
+			SetResultInputState();
 		}
 
 		protected override void OnKeyDown( KeyEventArgs e )
@@ -206,8 +217,7 @@ namespace RpnCalculator.UI
 					case Key.Enter:
 						if ( shiftIsDown )
 						{
-							calculator.Perform( Operation.Swap );
-							SetResultInputState();
+							Perform( Operation.Swap );
 						}
 						else
 						{
@@ -217,23 +227,16 @@ namespace RpnCalculator.UI
 						break;
 					case Key.Back:
 						if ( shiftIsDown )
-						{
-							calculator.Perform( Operation.Drop );
-							SetResultInputState();
-						}
+							Perform( Operation.Drop );
 						else
-						{
 							InputState.Backspace();
-						}
 						break;
 					case Key.Oem2:
 					case Key.Divide:
-						calculator.Perform( Operation.Division );
-						SetResultInputState();
+						Perform( Operation.Division );
 						break;
 					case Key.Multiply:
-						calculator.Perform( Operation.Multiplication );
-						SetResultInputState();
+						Perform( Operation.Multiplication );
 						break;
 					case Key.OemMinus:
 					case Key.Subtract:
@@ -243,15 +246,13 @@ namespace RpnCalculator.UI
 						}
 						else
 						{
-							calculator.Perform( Operation.Subtraction );
-							SetResultInputState();
+							Perform( Operation.Subtraction );
 						}
 
 						break;
 					case Key.OemPlus:
 					case Key.Add:
-						calculator.Perform( Operation.Addition );
-						SetResultInputState();
+						Perform( Operation.Addition );
 						break;
 					case Key.OemPeriod:
 					case Key.Decimal:
