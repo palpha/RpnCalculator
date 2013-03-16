@@ -1,7 +1,8 @@
 ﻿// Learn more about F# at http://fsharp.net. See the 'F# Tutorial' project
 // for more guidance on F# programming.
 
-#r "bin\\Debug\\RpnCalculator.Collections.dll"
+#I @"bin/Debug"
+#r "RpnCalculator.Collections.dll"
 #load "Calculator.fs"
 open RpnCalculator.Logic
 
@@ -27,6 +28,5 @@ calc.Push(Entry 2m)
 calc.Perform(Operation.Multiplication)
 calc.Perform(Operation.Addition)
 assert (calc.X = Some(Entry 10m))
-
 
 calc.Stack |> Seq.nth 0

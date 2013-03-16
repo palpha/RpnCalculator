@@ -5,12 +5,12 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>28d9e2fe-fbde-4a18-827b-24e0f61db40c</ProjectGuid>
+    <ProjectGuid>28D9E2FE-FBDE-4A18-827B-24E0F61DB40C</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>RpnCalculator.Logic</RootNamespace>
     <AssemblyName>RpnCalculator.Logic</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>RpnCalculator.Logic</Name>
+    <ProductVersion>12.0.0</ProductVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,8 +33,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\lib\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,8 +47,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RpnCalculator.ObservableStack\RpnCalculator.Collections.csproj">
       <Name>RpnCalculator.Collections</Name>
-      <Project>{193c543b-563d-49fa-b2a0-6699e3c657dd}</Project>
-      <Private>True</Private>
+      <Project>{193C543B-563D-49FA-B2A0-6699E3C657DD}</Project>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
@@ -59,7 +58,11 @@
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
+  <ItemGroup>
+    <DataFiles Include="..\lib\FSharp.Core.*data"/>
+  </ItemGroup>
   <Target Name="AfterBuild">
+    <Copy SourceFiles="@(DataFiles)" DestinationFolder="$(OutputPath)"/>
   </Target>
   -->
 </Project>
